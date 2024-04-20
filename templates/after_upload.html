@@ -1,0 +1,17 @@
+<div class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <p class="h2 mr-3">Uploaded file:</p>
+    <audio controls>
+        <source src="{{.AudioPath}}" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+</div>
+<div class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <img src="{{.ImagePath}}" alt="Spectrogram" class="img-fluid">
+</div>
+<div class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <p class="h2 mr-3">SEPARATE USING:</p>
+    <button class="btn btn-primary" hx-get="/separate-median">Median filtering</button>
+    <button class="btn btn-primary" hx-get="/separate-kam">Kernel Additive Models</button>
+    <button class="btn btn-primary" hx-get="/separate-ml">Machine Learning</button>
+</div>
+

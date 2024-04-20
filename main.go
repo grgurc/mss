@@ -41,19 +41,21 @@ func saveUploadedFile(f multipart.File) error {
 }
 
 func main() {
+	index := template.Must(template.ParseFiles("./templates/index.html"))
+	afterUpload := template.Must(template.ParseFiles("./templates/after_upload.html"))
+
 	s := chi.NewRouter()
 
 	s.Get("/uploads/{file}", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("GET /uploads/%s", chi.URLParam(r, "file"))
 		http.ServeFile(w, r, "./uploads/"+chi.URLParam(r, "file"))
 	})
 
-	index := template.Must(template.ParseFiles("./templates/index.html"))
 	s.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /")
 		index.Execute(w, nil)
 	})
 
-	uploaded := template.Must(template.ParseFiles("./templates/uploaded.html"))
 	s.Post("/upload", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST /upload")
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
@@ -78,6 +80,7 @@ func main() {
 		cmd := exec.Command(pythonPath, "./scripts/spectrogram.py", "./uploads/original.wav")
 		output, err := cmd.CombinedOutput()
 		log.Println(string(output))
+		log.Println(err)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,13 +92,24 @@ func main() {
 			ImagePath: "http://localhost:8080/uploads/original_spectrogram.png",
 		}
 
-		uploaded.Execute(w, d)
+		afterUpload.Execute(w, d)
 		return
 		// now here we can return the spectrogram, not sure how though xd lol
 		// i think we need the address of the original request (aka the base url of the server)
 		// and then we are going to need something else which i cant think of right now
 		w.Write([]byte("<img src=\"http://localhost:8080/uploads/original_spectrogram.png\">"))
-		// uploaded.Execute(w, nil) // TODO
+		// afterUpload.Execute(w, nil) // TODO
+	})
+
+	s.Get("/separate-median", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /separate-median")
+		cmd := exec.Command(pythonPath, "./scripts/separate_median.py", "./uploads/original.wav")
+		output, err := cmd.CombinedOutput()
+		log.Println(string(output))
+		log.Println(err)
+
+		return
+		// afterSeparate.Execute(w, nil)
 	})
 
 	fmt.Println("Starting server on localhost:8080")

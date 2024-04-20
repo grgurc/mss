@@ -6,7 +6,7 @@ Master's Thesis Assignment Solution Repository - Grgur Crnogorac
 Requirements:
 - Go
 - Python with depenedencies installed
-- currently only tested on MacOS, the binary is also built specifically for macos
+- currently only tested on MacOS
 
 How to run
 
