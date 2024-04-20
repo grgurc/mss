@@ -1,9 +1,9 @@
 package main
 
 import (
-	"crypto/sha1"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,84 +11,95 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
 )
 
 const pythonPath string = "./env/bin/python3"
 
-func saveUploadedFile(fh *multipart.FileHeader) (string, error) {
-	f, err := fh.Open()
+type InitialUploadData struct {
+	AudioPath string
+	ImagePath string
+}
+
+func saveUploadedFile(f multipart.File) error {
+	err := os.Mkdir("./uploads", os.ModePerm)
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		return err
+	}
+	dst, err := os.Create("./uploads/original.wav")
 	if err != nil {
-		return "", err
+		return err
 	}
-	defer f.Close()
+	defer dst.Close()
 
-	data, err := io.ReadAll(f)
+	_, err = io.Copy(dst, f)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	hash := sha1.Sum(data)
-	dirPath := fmt.Sprintf("./uploads/%x", hash)
-	if err = os.Mkdir(dirPath, 0777); err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			log.Println(err)
-		}
-	}
-
-	filePath := fmt.Sprintf("%s/original.wav", dirPath)
-	saveFile, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer saveFile.Close()
-
-	if _, err := saveFile.Write(data); err != nil {
-		return "", err
-	}
-	return filePath, nil
+	return nil
 }
 
 func main() {
-	router := gin.Default()
+	s := chi.NewRouter()
 
-	router.POST("/upload", func(c *gin.Context) {
-		file, err := c.FormFile("file")
-		if err != nil {
+	s.Get("/uploads/{file}", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./uploads/"+chi.URLParam(r, "file"))
+	})
+
+	index := template.Must(template.ParseFiles("./templates/index.html"))
+	s.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /")
+		index.Execute(w, nil)
+	})
+
+	uploaded := template.Must(template.ParseFiles("./templates/uploaded.html"))
+	s.Post("/upload", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("POST /upload")
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			log.Println(err)
-			c.String(http.StatusBadRequest, "Error uploading file")
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		filePath, err := saveUploadedFile(file)
+
+		f, _, err := r.FormFile("file")
 		if err != nil {
-			log.Println(err)
-			c.String(http.StatusBadRequest, "Error saving file")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer f.Close()
+
+		err = saveUploadedFile(f)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		cmd := exec.Command(pythonPath, "./scripts/spectrogram.py", filePath)
+		cmd := exec.Command(pythonPath, "./scripts/spectrogram.py", "./uploads/original.wav")
 		output, err := cmd.CombinedOutput()
+		log.Println(string(output))
 		if err != nil {
 			log.Println(err)
-			log.Println(string(output))
-			c.String(http.StatusBadRequest, "Error generating spectrogram")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(string(output))
 
-		c.String(http.StatusOK, "File uploaded")
+		d := InitialUploadData{
+			AudioPath: "http://localhost:8080/uploads/original.wav",
+			ImagePath: "http://localhost:8080/uploads/original_spectrogram.png",
+		}
+
+		uploaded.Execute(w, d)
+		return
+		// now here we can return the spectrogram, not sure how though xd lol
+		// i think we need the address of the original request (aka the base url of the server)
+		// and then we are going to need something else which i cant think of right now
+		w.Write([]byte("<img src=\"http://localhost:8080/uploads/original_spectrogram.png\">"))
+		// uploaded.Execute(w, nil) // TODO
 	})
 
-	router.GET("/:hash", func(c *gin.Context) {
-		hash := c.Param("hash")
-		c.File(fmt.Sprintf("./uploads/%s/original.wav", hash))
-		// here we will load a webpage consisting of the spectrogram of the original file and buttons for doing all the other functionality
-		// just have to figure out how to do that with gin
-	})
-
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "index")
-	})
-
-	router.Run(":8080")
+	fmt.Println("Starting server on localhost:8080")
+	if err := http.ListenAndServe(":8080", s); err != nil {
+		log.Fatal(err)
+	}
 }
