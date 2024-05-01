@@ -8,10 +8,33 @@
 <div class="col-md-12 d-flex justify-content-center align-items-center m-3">
     <img src="{{.ImagePath}}" alt="Spectrogram" class="img-fluid">
 </div>
+
 <div class="col-md-12 d-flex justify-content-center align-items-center m-3">
-    <p class="h2 mr-3">SEPARATE USING:</p>
-    <button class="btn btn-primary" hx-get="/separate-median">Median filtering</button>
-    <button class="btn btn-primary" hx-get="/separate-kam">Kernel Additive Models</button>
-    <button class="btn btn-primary" hx-get="/separate-ml">Machine Learning</button>
+    <p class="h2">Choose separation method:</p>
 </div>
 
+<div id="sep-median-result" class="row p-5 justify-content-center">
+    <div class="col-md-12 d-flex justify-content-center align-items-center m-3">
+        <button class="btn btn-primary" hx-get="/separate-median" hx-target="#sep-median-result" hx-swap="beforeend" hx-indicator="#median-progress">Median filtering</button>
+        <h5 id="median-progress" class="htmx-indicator text-center">PROCESSING...</h5>
+    </div>
+</div>
+
+<div id="sep-kam-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <div class="col-md-12 d-flex justify-content-center align-items-center m-3"></div>
+        <button class="btn btn-primary" hx-get="/separate-kam" hx-target="#sep-kam-result" hx-swap="beforeend" hx-indicator="#kam-progress">Kernel Additive Models</button>
+        <h5 id="kam-progress" class="htmx-indicator text-center">PROCESSING...</h5>
+    </div>
+</div>
+
+<!--
+<div class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <p class="h2 mr-3">Choose separation method:</p>
+    <button class="btn btn-primary" hx-get="/separate-median" hx-target="#sep-result" hx-swap="innerHTML" hx-indicator="#upload-progress">Median filtering</button>
+    <button class="btn btn-primary" hx-get="/separate-kam" hx-target="#sep-result" hx-swap="innerHTML" hx-indicator="#upload-progress">Kernel Additive Models</button>
+    <button class="btn btn-primary" hx-get="/separate-ml" hx-target="#sep-result" hx-swap="innerHTML" hx-indicator="#upload-progress">Machine Learning</button>
+</div>
+<div id = "sep-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <h5 id="upload-progress" class="htmx-indicator text-center">PROCESSING...</h5>
+</div>
+-->

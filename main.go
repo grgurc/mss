@@ -15,10 +15,17 @@ import (
 )
 
 const pythonPath string = "./env/bin/python3"
+const serverAddress string = "http://localhost:8080"
 
 type InitialUploadData struct {
 	AudioPath string
 	ImagePath string
+}
+
+type SeparatedData struct {
+	SourceType string // type of source (harmonic, percussive, vocals...)
+	AudioPath  string
+	ImagePath  string
 }
 
 func saveUploadedFile(f multipart.File) error {
@@ -43,6 +50,7 @@ func saveUploadedFile(f multipart.File) error {
 func main() {
 	index := template.Must(template.ParseFiles("./templates/index.html"))
 	afterUpload := template.Must(template.ParseFiles("./templates/after_upload.html"))
+	afterSeparate := template.Must(template.ParseFiles("./templates/separation_result.html"))
 
 	s := chi.NewRouter()
 
@@ -88,28 +96,47 @@ func main() {
 		}
 
 		d := InitialUploadData{
-			AudioPath: "http://localhost:8080/uploads/original.wav",
-			ImagePath: "http://localhost:8080/uploads/original_spectrogram.png",
+			AudioPath: fmt.Sprintf("%v/%v", serverAddress, "uploads/original.wav"),
+			ImagePath: fmt.Sprintf("%v/%v", serverAddress, "uploads/original_spectrogram.png"),
 		}
 
 		afterUpload.Execute(w, d)
-		return
-		// now here we can return the spectrogram, not sure how though xd lol
-		// i think we need the address of the original request (aka the base url of the server)
-		// and then we are going to need something else which i cant think of right now
-		w.Write([]byte("<img src=\"http://localhost:8080/uploads/original_spectrogram.png\">"))
-		// afterUpload.Execute(w, nil) // TODO
 	})
 
 	s.Get("/separate-median", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /separate-median")
-		cmd := exec.Command(pythonPath, "./scripts/separate_median.py", "./uploads/original.wav")
+
+		cmd := exec.Command(pythonPath, "./scripts/separate_median.py")
 		output, err := cmd.CombinedOutput()
 		log.Println(string(output))
 		log.Println(err)
 
-		return
-		// afterSeparate.Execute(w, nil)
+		cmd = exec.Command(pythonPath, "./scripts/spectrogram.py", "./uploads/median_harmonic.wav")
+		output, err = cmd.CombinedOutput()
+		log.Println(string(output))
+		log.Println(err)
+
+		cmd = exec.Command(pythonPath, "./scripts/spectrogram.py", "./uploads/median_percussive.wav")
+		output, err = cmd.CombinedOutput()
+		log.Println(string(output))
+		log.Println(err)
+
+		d := []SeparatedData{
+			{
+				SourceType: "Harmonic",
+				AudioPath:  fmt.Sprintf("%v/%v", serverAddress, "uploads/median_harmonic.wav"),
+				ImagePath:  fmt.Sprintf("%v/%v", serverAddress, "uploads/median_harmonic_spectrogram.png"),
+			},
+			{
+				SourceType: "Percussive",
+				AudioPath:  fmt.Sprintf("%v/%v", serverAddress, "uploads/median_percussive.wav"),
+				ImagePath:  fmt.Sprintf("%v/%v", serverAddress, "uploads/median_percussive_spectrogram.png"),
+			},
+		}
+
+		log.Println(d)
+
+		afterSeparate.Execute(w, d)
 	})
 
 	fmt.Println("Starting server on localhost:8080")
