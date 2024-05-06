@@ -9,6 +9,8 @@
     <img src="{{.ImagePath}}" alt="Spectrogram" class="img-fluid">
 </div>
 
+<hr />
+
 <div class="col-md-12 d-flex justify-content-center align-items-center m-3">
     <p class="h2">Choose separation method:</p>
 </div>
@@ -17,8 +19,8 @@
     <button class="btn btn-primary" hx-get="/separate-median" hx-target="#sep-median-result" hx-swap="outerHTML">Median filtering</button>
 </div>
 
-<div id="sep-kam-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
-    <button class="btn btn-primary" hx-get="/separate-kam" hx-target="#sep-kam-result" hx-swap="beforeend">Kernel Additive Models</button>
+<div id="sep-umx-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <button class="btn btn-primary" hx-get="/separate-unmix" hx-target="#sep-umx-result" hx-swap="outerHTML">Open Unmix</button>
 </div>
 
 <!--

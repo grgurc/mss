@@ -11,5 +11,5 @@ if __name__ == "__main__":
     y, sr = librosa.load(file_path)
     D = librosa.stft(y)
     H, P = librosa.decompose.hpss(D)
-    sf.write("./uploads/median_harmonic.wav", librosa.istft(H), sr)
-    sf.write("./uploads/median_percussive.wav", librosa.istft(P), sr)
+    sf.write("./uploads/median/harmonic.wav", librosa.istft(H), sr)
+    sf.write("./uploads/median/percussive.wav", librosa.istft(P), sr)
