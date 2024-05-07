@@ -12,8 +12,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -93,17 +95,21 @@ func getSeparatedData(dirName string) []SeparatedData {
 
 func generateSpectrograms(dirName string) error {
 	dirPath := filepath.Join(uploadsPath, dirName) // uploads/{dirName}
+	errGroup := new(errgroup.Group)
 
 	filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
 		if !d.IsDir() && isWav(d) {
-			cmd := exec.Command(pythonPath, spectrogramScript, path)
-
-			if err := cmd.Run(); err != nil {
+			errGroup.Go(func() error {
+				err := exec.Command(pythonPath, spectrogramScript, path).Run()
 				return err
-			}
+			})
 		}
 		return nil
 	})
+
+	if err := errGroup.Wait(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -171,9 +177,7 @@ func main() {
 		}
 
 		cmd := exec.Command(pythonPath, "./scripts/spectrogram.py", "./uploads/original.wav")
-		output, err := cmd.CombinedOutput()
-		fmt.Println(string(output))
-		fmt.Println(err)
+		_, err = cmd.CombinedOutput()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -191,6 +195,8 @@ func main() {
 	s.Get("/separate-median", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /separate-median")
 
+		startTime := time.Now()
+
 		// treba uzet uploadani original
 		// napravit separaciju -> pozvat python, skriptu separate_median.py
 		// napravit spektrograme -> za svaki fajl koji nastane pozvat pajton, skriptu spectrogram.py i dat fajlname
@@ -198,9 +204,11 @@ func main() {
 		// pa da, to se cini jednostavnije, napravis neki walkdir ili neki vrag u folderu u pajton skripti i rokavela
 
 		cmd := exec.Command(pythonPath, "./scripts/separate_median.py")
-		output, err := cmd.CombinedOutput()
-		fmt.Println(string(output))
-		fmt.Println(err)
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
 		err = generateSpectrograms("median")
 		if err != nil {
@@ -209,17 +217,23 @@ func main() {
 
 		d := getSeparatedData("median")
 
+		endTime := time.Now()
+		fmt.Printf("\n\nseparate-median took %v seconds\n", (endTime.Sub(startTime)).Seconds())
+
 		afterSeparate.Execute(w, d)
 	})
 
 	s.Get("/separate-unmix", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /separate-unmix")
+		startTime := time.Now()
 
 		cmd := exec.Command(unmixPath, "./uploads/original.wav")
-		fmt.Println(cmd)
-		output, err := cmd.CombinedOutput()
-		fmt.Println(string(output))
-		fmt.Println(err)
+
+		_, err := cmd.CombinedOutput() // TODO -> use run
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
 		err = moveDirContents("./original_umxl", "./uploads/umx")
 		if err != nil {
@@ -234,7 +248,8 @@ func main() {
 
 		d := getSeparatedData("umx")
 
-		log.Println(d)
+		endTime := time.Now()
+		fmt.Printf("\n\nseparate-unmix took %v seconds\n", (endTime.Sub(startTime)).Seconds())
 
 		afterSeparate.Execute(w, d)
 	})
