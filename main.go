@@ -41,6 +41,16 @@ type SeparatedData struct {
 	ImagePath  string
 }
 
+func timeFunc(f func(args ...any) error) func(args ...any) error {
+	return func(args ...any) error {
+		s := time.Now()
+		err := f(args)
+		e := time.Now()
+		fmt.Printf("Operation took: %v seconds\n", e.Sub(s).Seconds())
+		return err
+	}
+}
+
 func saveUploadedFile(f multipart.File) error {
 	err := os.MkdirAll("./uploads/median", os.ModePerm)
 	if err != nil {
