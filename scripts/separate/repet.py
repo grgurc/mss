@@ -37,6 +37,8 @@ import numpy as np
 import scipy.signal
 import scipy.io.wavfile
 import matplotlib.pyplot as plt
+import sys
+import pathlib
 
 
 # Public variables
@@ -96,7 +98,7 @@ def original(audio_signal, sampling_frequency):
 
         # Compute the mixture, background, and foreground spectrograms
         window_length = pow(2, int(np.ceil(np.log2(0.04*sampling_frequency))))
-        window_function = scipy.signal.hamming(window_length, sym=False)
+        window_function = scipy.signal.windows.hamming(window_length, sym=False)
         step_length = int(window_length/2)
         number_frequencies = int(window_length/2)+1
         audio_spectrogram = abs(repet._stft(np.mean(audio_signal, axis=1), window_function, step_length)[0:number_frequencies, :])
@@ -128,7 +130,7 @@ def original(audio_signal, sampling_frequency):
     # (audio stationary around 40 ms, power of 2 for fast FFT and constant overlap-add (COLA),
     # periodic Hamming window for COLA, and step equal to half the window length for COLA)
     window_length = pow(2, int(np.ceil(np.log2(0.04 * sampling_frequency))))
-    window_function = scipy.signal.hamming(window_length, sym=False)
+    window_function = scipy.signal.windows.hamming(window_length, sym=False)
     step_length = int(window_length / 2)
 
     # Derive the number of time frames (given the zero-padding at the start and the end of the signal)
@@ -234,7 +236,7 @@ def extended(audio_signal, sampling_frequency):
 
         # Compute the mixture, background, and foreground spectrograms
         window_length = pow(2, int(np.ceil(np.log2(0.04*sampling_frequency))))
-        window_function = scipy.signal.hamming(window_length, sym=False)
+        window_function = scipy.signal.windows.hamming(window_length, sym=False)
         step_length = int(window_length/2)
         number_frequencies = int(window_length/2)+1
         audio_spectrogram = abs(repet._stft(np.mean(audio_signal, axis=1), window_function, step_length)[0:number_frequencies, :])
@@ -287,7 +289,7 @@ def extended(audio_signal, sampling_frequency):
     # (audio stationary around 40 ms, power of 2 for fast FFT and constant overlap-add (COLA),
     # periodic Hamming window for COLA, and step equal half the window length for COLA)
     window_length = pow(2, int(np.ceil(np.log2(0.04 * sampling_frequency))))
-    window_function = scipy.signal.hamming(window_length, sym=False)
+    window_function = scipy.signal.windows.hamming(window_length, sym=False)
     step_length = int(window_length / 2)
 
     # Get the period range in time frames for the beat spectrum
@@ -454,7 +456,7 @@ def adaptive(audio_signal, sampling_frequency):
 
         # Compute the mixture, background, and foreground spectrograms
         window_length = pow(2, int(np.ceil(np.log2(0.04*sampling_frequency))))
-        window_function = scipy.signal.hamming(window_length, sym=False)
+        window_function = scipy.signal.windows.hamming(window_length, sym=False)
         step_length = int(window_length/2)
         number_frequencies = int(window_length/2)+1
         audio_spectrogram = abs(repet._stft(np.mean(audio_signal, axis=1), window_function, step_length)[0:number_frequencies, :])
@@ -486,7 +488,7 @@ def adaptive(audio_signal, sampling_frequency):
     # (audio stationary around 40 ms, power of 2 for fast FFT and constant overlap-add (COLA),
     # periodic Hamming window for COLA, and step equal to half the window length for COLA)
     window_length = pow(2, int(np.ceil(np.log2(0.04 * sampling_frequency))))
-    window_function = scipy.signal.hamming(window_length, sym=False)
+    window_function = scipy.signal.windows.hamming(window_length, sym=False)
     step_length = int(window_length / 2)
 
     # Derive the number of time frames (given the zero-padding at the start and the end of the signal)
@@ -602,7 +604,7 @@ def sim(audio_signal, sampling_frequency):
 
         # Compute the mixture, background, and foreground spectrograms
         window_length = pow(2, int(np.ceil(np.log2(0.04*sampling_frequency))))
-        window_function = scipy.signal.hamming(window_length, sym=False)
+        window_function = scipy.signal.windows.hamming(window_length, sym=False)
         step_length = int(window_length/2)
         number_frequencies = int(window_length/2)+1
         audio_spectrogram = abs(repet._stft(np.mean(audio_signal, axis=1), window_function, step_length)[0:number_frequencies, :])
@@ -634,7 +636,7 @@ def sim(audio_signal, sampling_frequency):
     # (audio stationary around 40 ms, power of 2 for fast FFT and constant overlap-add (COLA),
     # periodic Hamming window for COLA, and step equal half the window length for COLA)
     window_length = pow(2, int(np.ceil(np.log2(0.04 * sampling_frequency))))
-    window_function = scipy.signal.hamming(window_length, sym=False)
+    window_function = scipy.signal.windows.hamming(window_length, sym=False)
     step_length = int(window_length / 2)
 
     # Derive the number of time frames (given the zero-padding at the start and the end of the signal)
@@ -742,7 +744,7 @@ def simonline(audio_signal, sampling_frequency):
 
         # Compute the mixture, background, and foreground spectrograms
         window_length = pow(2, int(np.ceil(np.log2(0.04*sampling_frequency))))
-        window_function = scipy.signal.hamming(window_length, sym=False)
+        window_function = scipy.signal.windows.hamming(window_length, sym=False)
         step_length = int(window_length/2)
         number_frequencies = int(window_length/2)+1
         audio_spectrogram = abs(repet._stft(np.mean(audio_signal, axis=1), window_function, step_length)[0:number_frequencies, :])
@@ -774,7 +776,7 @@ def simonline(audio_signal, sampling_frequency):
     # (audio stationary around 40 ms, power of 2 for fast FFT and constant overlap-add (COLA),
     # periodic Hamming window for COLA, and step equal half the window length for COLA)
     window_length = pow(2, int(np.ceil(np.log2(0.04 * sampling_frequency))))
-    window_function = scipy.signal.hamming(window_length, sym=False)
+    window_function = scipy.signal.windows.hamming(window_length, sym=False)
     step_length = int(window_length / 2)
 
     # Derive the number of time frames
@@ -1543,3 +1545,19 @@ def _simmask(audio_spectrogram, similarity_indices):
     )
 
     return repeating_mask
+
+if __name__ == "__main__":
+    uploads_path = sys.argv[1] # ./././uploads
+    original_path = pathlib.Path(uploads_path) / "original.wav"
+
+    audio, freq = wavread(str(original_path))
+
+    background = adaptive(audio, freq)
+    foreground = audio-background
+
+    # this is horrible, don't use relative paths if possible
+    # refactor later pls
+    bg_path = pathlib.Path(uploads_path) / "repet" / "background.wav"
+    fg_path = pathlib.Path(uploads_path) / "repet" / "foreground.wav"
+    wavwrite(background, freq, str(bg_path))
+    wavwrite(foreground, freq, str(fg_path))

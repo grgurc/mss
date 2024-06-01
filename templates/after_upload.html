@@ -1,5 +1,5 @@
 <div class="col-md-12 d-flex justify-content-center align-items-center m-3">
-    <p class="h2 mr-3">Uploaded file:</p>
+    <p class="h3 mr-3">Uploaded file:</p>
     <audio controls>
         <source src="{{.AudioPath}}" type="audio/wav">
         Your browser does not support the audio element.
@@ -15,12 +15,16 @@
     <p class="h2">Choose separation method:</p>
 </div>
 
-<div id="sep-median-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
-    <button class="btn btn-primary" hx-get="/separate-median" hx-target="#sep-median-result" hx-swap="outerHTML">Median filtering</button>
+<div id="median" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <button class="btn btn-primary" hx-get="/separate/median" hx-target="#median" hx-swap="outerHTML">Median filtering</button>
 </div>
 
-<div id="sep-umx-result" class="col-md-12 d-flex justify-content-center align-items-center m-3">
-    <button class="btn btn-primary" hx-get="/separate-unmix" hx-target="#sep-umx-result" hx-swap="outerHTML">Open Unmix</button>
+<div id="repet" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <button class="btn btn-primary" hx-get="/separate/repet" hx-target="#repet" hx-swap="outerHTML">REPET</button>
+</div>
+
+<div id="umx" class="col-md-12 d-flex justify-content-center align-items-center m-3">
+    <button class="btn btn-primary" hx-get="/separate/unmix" hx-target="#umx" hx-swap="outerHTML">Open Unmix</button>
 </div>
 
 <!--
