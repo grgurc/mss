@@ -29,7 +29,10 @@ func NewPython(basePath string) *Python {
 
 func (p *Python) Spectrogram(wavPath string) error {
 	cmd := exec.Command(p.execPath, p.spectrogramPath, wavPath)
-	err := cmd.Run()
+
+	out, err := cmd.CombinedOutput()
+	log.Println(string(out))
+	log.Println(err)
 	if err != nil {
 		return err
 	}
@@ -38,12 +41,13 @@ func (p *Python) Spectrogram(wavPath string) error {
 }
 
 func (p *Python) Separate(method string) error {
-	log.Println(p.scriptsPath, method)
 	script := path.Join(p.scriptsPath, "separate", method+".py")
 
 	cmd := exec.Command(p.execPath, script, p.uploadsPath)
 
-	err := cmd.Run()
+	out, err := cmd.CombinedOutput()
+	log.Println(string(out))
+	log.Println(err)
 	if err != nil {
 		return err
 	}

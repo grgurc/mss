@@ -1,6 +1,7 @@
 package separator
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -60,8 +61,10 @@ func (s *Separator) generateSpectrograms(method string) error {
 	errGroup := new(errgroup.Group)
 
 	filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
-		if !d.IsDir() && util.IsWav(d) {
+		fmt.Println("PATH:", path)
+		if util.IsWav(d) {
 			errGroup.Go(func() error {
+				fmt.Println("CALLING SPECTROGRAM:", path)
 				err := s.python.Spectrogram(path)
 				return err
 			})

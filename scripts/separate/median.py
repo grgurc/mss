@@ -13,7 +13,7 @@ if __name__ == "__main__":
     y, sr = librosa.load(str(original_path))
     D = librosa.stft(y)
     H, P = librosa.decompose.hpss(D)
-    harmonic_path = Path(uploads_path) / "median" / "harmonic"
-    percussive_path = Path(uploads_path) / "median" / "percussive"
+    harmonic_path = Path(uploads_path) / "median" / "harmonic.wav"
+    percussive_path = Path(uploads_path) / "median" / "percussive.wav"
     sf.write(str(harmonic_path), librosa.istft(H), sr)
     sf.write(str(percussive_path), librosa.istft(P), sr)

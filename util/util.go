@@ -15,5 +15,5 @@ func URL(parts ...string) string {
 }
 
 func IsWav(d fs.DirEntry) bool {
-	return path.Ext(d.Name()) == "wav"
+	return path.Ext(d.Name()) == ".wav"
 }
